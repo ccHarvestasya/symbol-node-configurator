@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "main": "public/electron.mjs",
   "type": "module",
+  "build": {
+    "extraMetadata": {
+      "main": "./build/electron.mjs"
+    }
+  },
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
@@ -32,7 +37,7 @@
     "build": "run-s react:build electron:build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "format": "prettier --write --ignore-path .gitignore './**/*.{js,jsx,ts,tsx,json,css}' && react lint --fix",
+    "format": "prettier --write --ignore-path .gitignore './**/*.{js,mjs,jsx,ts,tsx,css}'",
     "i18next-extract": "babel --config-file ./src/i18n/babel.config.json --out-dir ./src  './src/**/*.{js,jsx,ts,tsx}'"
   },
   "eslintConfig": {

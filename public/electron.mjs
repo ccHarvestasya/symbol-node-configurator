@@ -3,7 +3,7 @@ import { app, BrowserWindow } from 'electron'
 import isDev from 'electron-is-dev'
 import path from 'path'
 
-const __dirname = import.meta.dirname;
+const __dirname = import.meta.dirname
 
 // ブラウザウィンドウに関する処理
 function createWindow() {
@@ -15,6 +15,8 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'), // ウィンドウプロセスの初期化スクリプト指定
     },
   })
+  mainWindow.setTitle('Window Title')
+  mainWindow.setMenuBarVisibility(false)
 
   // URLの読み込み
   mainWindow.loadURL(
