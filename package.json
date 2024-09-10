@@ -1,6 +1,8 @@
 {
   "name": "symbol-node-configurator",
   "version": "0.1.0",
+  "main": "public/electron.mjs",
+  "type": "module",
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
@@ -11,6 +13,7 @@
     "@types/node": "^16.7.13",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
+    "electron-is-dev": "^3.0.1",
     "i18next": "^23.15.1",
     "i18next-browser-languagedetector": "^8.0.0",
     "react": "^18.3.1",
@@ -21,8 +24,12 @@
     "web-vitals": "^2.1.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "react:start": "cross-env BROWSER=none react-scripts start",
+    "react:build": "react-scripts build",
+    "electron:start": "wait-on http://localhost:3000 && electron .",
+    "electron:build": "electron-builder",
+    "start": "run-p react:start electron:start",
+    "build": "run-s react:build electron:build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "format": "prettier --write --ignore-path .gitignore './**/*.{js,jsx,ts,tsx,json,css}' && react lint --fix",
@@ -55,8 +62,13 @@
     "@typescript-eslint/eslint-plugin": "^8.5.0",
     "@typescript-eslint/parser": "^8.5.0",
     "babel-plugin-i18next-extract": "^0.10.0",
+    "cross-env": "^7.0.3",
+    "electron": "^32.0.2",
+    "electron-builder": "^25.0.5",
     "eslint": "8.57.0",
     "eslint-config-prettier": "^9.1.0",
-    "prettier": "^3.3.3"
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.3.3",
+    "wait-on": "^8.0.0"
   }
 }
