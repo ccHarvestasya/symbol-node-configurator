@@ -4,6 +4,7 @@ import { Box, Card, CircularProgress, Container, Grid2 } from '@mui/material'
 import { load } from 'js-yaml'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { useToggle } from 'react-use'
 const childProcess = window.require('child_process')
 const fs = window.require('fs')
@@ -19,6 +20,7 @@ type DockerCompose = {
 
 export const Loader = (): JSX.Element => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
 
   const loadingIcon = <CircularProgress size={15} />
   const loadingCompleteIcon = (
@@ -60,7 +62,7 @@ export const Loader = (): JSX.Element => {
         setDockerLoaderIcon(loadingCompleteIcon)
       }
     })
-    dockerVerExec.stderr.on('data', (data: string) => {
+    dockerVerExec.stderr.on('data', (_data: string) => {
       setDockerVer(t('インストールされていません。'))
       setDockerLoaderIcon(loadFailureIcon)
       setIsDocker(false)
@@ -82,7 +84,7 @@ export const Loader = (): JSX.Element => {
         setDockerComposeLoaderIcon(loadingCompleteIcon)
       }
     })
-    dockerComposeVerExec.stderr.on('data', (data: string) => {
+    dockerComposeVerExec.stderr.on('data', (_data: string) => {
       setDockerComposeVer(t('インストールされていません。'))
       setDockerComposeLoaderIcon(loadFailureIcon)
       setIsDocker(false)
@@ -105,7 +107,7 @@ export const Loader = (): JSX.Element => {
       ) as DockerCompose
       const imageName = dockerComposeYaml.services.server.image
       const dockerPullExec = childProcess.exec(`docker pull -q ${imageName}`)
-      dockerPullExec.stdout.on('data', (data: string) => {
+      dockerPullExec.stdout.on('data', (_data: string) => {
         try {
           const stdout = childProcess.execSync(
             'docker image ls --format json symbolplatform/symbol-server',
@@ -131,11 +133,12 @@ export const Loader = (): JSX.Element => {
     const dockerComposeExec = childProcess.exec(
       'docker compose -f public/docker-compose.yml --progress json up -d',
     )
-    dockerComposeExec.stderr.on('data', (data: string) => {
+    dockerComposeExec.stderr.on('data', async (data: string) => {
       const status = JSON.parse(data).status
       setDockerContainerStatus(status)
       if (status === 'Running' || status === 'Started') {
         setDockerContainerLoaderIcon(loadingCompleteIcon)
+        navigate('/main')
       }
     })
   }, [isDockerImage])

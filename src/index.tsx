@@ -3,7 +3,9 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import App from './App'
 import './index.css'
+import { Configurator } from './pages/Configurator'
 import { Loader } from './pages/Loader'
+import { Main } from './pages/Main'
 import reportWebVitals from './reportWebVitals'
 
 const darkTheme = createTheme({
@@ -20,6 +22,8 @@ root.render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Loader />} />
+        <Route path="/main" element={<Main />} />
+        <Route path="/configurator" element={<Configurator />} />
         <Route path="/*" element={<App />} />
       </Routes>
     </BrowserRouter>
