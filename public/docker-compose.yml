@@ -1,0 +1,8 @@
+services:
+  server:
+    container_name: symbol-server
+    image: symbolplatform/symbol-server:gcc-1.0.3.7
+    command: /bin/bash
+    environment:
+      - LD_LIBRARY_PATH=/usr/catapult/lib:/usr/catapult/deps
+    tty: true

@@ -1,7 +1,14 @@
+import { createTheme } from '@mui/material'
 import { useEffect, useState } from 'react'
 import './App.css'
 import logo from './logo.svg'
 const childProcess = window.require('child_process')
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+})
 
 function App() {
   const [progressText, setProgressText] = useState('')

@@ -1,4 +1,5 @@
 // 各モジュールのインポート
+import { execSync } from 'child_process'
 import { app, BrowserWindow } from 'electron'
 import isDev from 'electron-is-dev'
 import path from 'path'
@@ -12,11 +13,13 @@ function createWindow() {
     width: 800,
     height: 600,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'), // ウィンドウプロセスの初期化スクリプト指定
+      nodeIntegration: true,
+      contextIsolation: false,
+      // preload: path.join(__dirname, 'preload.js'), // ウィンドウプロセスの初期化スクリプト指定
     },
   })
   mainWindow.setTitle('Window Title')
-  mainWindow.setMenuBarVisibility(false)
+  // mainWindow.setMenuBarVisibility(false) // メニュー消す
 
   // URLの読み込み
   mainWindow.loadURL(
@@ -30,8 +33,6 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow()
 
-  // DjangoをGunicorn経由で起動する処理（※後ほど記述）
-
   app.on('activate', function () {
     // 開いているウィンドウがなければ開く
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -40,5 +41,6 @@ app.whenReady().then(() => {
 
 // ウィンドウが閉じた時の処理（macOSでは明示的にアプリケーションを終了した時）
 app.on('window-all-closed', function () {
+  execSync('docker compose -f public/docker-compose.yml stop')
   if (process.platform !== 'darwin') app.quit()
 })
