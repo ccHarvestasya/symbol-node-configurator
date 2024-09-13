@@ -78,7 +78,7 @@ export const Main = (): JSX.Element => {
           <Grid2 size={4.5}></Grid2>
           <Grid2 size={3}>
             <Button variant="contained" color="primary" fullWidth>
-              {t('メインネット ノード設定')}
+              {t('メインネット プロパティ作成')}
             </Button>
           </Grid2>
           <Grid2 size={4.5}></Grid2>
@@ -88,7 +88,7 @@ export const Main = (): JSX.Element => {
           <Grid2 size={4.5}></Grid2>
           <Grid2 size={3}>
             <Button variant="contained" color="secondary" fullWidth>
-              {t('テストネット ノード設定')}
+              {t('テストネット プロパティ作成')}
             </Button>
           </Grid2>
           <Grid2 size={4.5}></Grid2>
