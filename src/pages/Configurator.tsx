@@ -1,6 +1,8 @@
 import { Box, Tab, Tabs } from '@mui/material'
+import { sha3_256 } from '@noble/hashes/sha3'
 import { SyntheticEvent, useEffect, useState } from 'react'
 import { Nemesis } from '../components/Nemesis'
+import { Account } from '../models/Account'
 import { NemesisProperties } from '../models/NemesisProperties'
 const childProcess = window.require('child_process')
 
@@ -34,12 +36,32 @@ function a11yProps(index: number) {
   }
 }
 
+const createSHA3_256Hash = () => {
+  const seed = crypto.getRandomValues(new Uint8Array(20))
+  const sha3 = sha3_256.create()
+  const hash = sha3.update(seed)
+  return Buffer.from(hash.digest()).toString('hex').toUpperCase()
+}
+
+const createAccount = () => {
+  const stdout = childProcess.execSync(
+    'docker exec -i symbol-server /usr/catapult/bin/catapult.tools.addressgen -f csv -c 1',
+  )
+  const csv = stdout.toString().split('\n')[7].split(',')
+  return new Account(csv[0], csv[2], csv[3], csv[4])
+}
+
 export const Configurator = (): JSX.Element => {
   const [address, setAddress] = useState('')
 
   /** nemesisプロパティ */
   const nemesisProp = new NemesisProperties()
-  nemesisProp.nemesis.networkIdentifier = 109
+  nemesisProp.nemesis.networkIdentifier = Math.floor(Math.random() * 255)
+  nemesisProp.nemesis.nemesisGenerationHashSeed = createSHA3_256Hash()
+  nemesisProp.nemesis.nemesisSignerAccount = createAccount()
+  nemesisProp.cpp.cppFileHeader = ''
+  nemesisProp.output.cppFile = ''
+  nemesisProp.output.binDirectory = '../seed'
   nemesisProp.namespaces = [
     {
       name: 'symbol',
@@ -48,60 +70,60 @@ export const Configurator = (): JSX.Element => {
         {
           name: 'xym',
           duration: 0,
-          mosaic: {
-            supply: '7842928625.000000',
-            divisibility: 6,
-            duration: 0,
-            isTransferable: true,
-            isRestrictable: false,
-            isSupplyMutable: false,
-            isRevokable: false,
-            distribution: [],
-          },
+          // mosaic: {
+          //   supply: '7842928625.000000',
+          //   divisibility: 6,
+          //   duration: 0,
+          //   isTransferable: true,
+          //   isRestrictable: false,
+          //   isSupplyMutable: false,
+          //   isRevokable: false,
+          //   distribution: [],
+          // },
           children: [],
         },
         {
           name: 'xym2',
           duration: 0,
-          mosaic: {
-            supply: '7842928625.000000',
-            divisibility: 6,
-            duration: 0,
-            isTransferable: true,
-            isRestrictable: false,
-            isSupplyMutable: false,
-            isRevokable: false,
-            distribution: [],
-          },
+          // mosaic: {
+          //   supply: '7842928625.000000',
+          //   divisibility: 6,
+          //   duration: 0,
+          //   isTransferable: true,
+          //   isRestrictable: false,
+          //   isSupplyMutable: false,
+          //   isRevokable: false,
+          //   distribution: [],
+          // },
           children: [
             {
               name: 'xam',
               duration: 0,
-              mosaic: {
-                supply: '7842928625.000000',
-                divisibility: 6,
-                duration: 0,
-                isTransferable: true,
-                isRestrictable: false,
-                isSupplyMutable: false,
-                isRevokable: false,
-                distribution: [],
-              },
+              // mosaic: {
+              //   supply: '7842928625.000000',
+              //   divisibility: 6,
+              //   duration: 0,
+              //   isTransferable: true,
+              //   isRestrictable: false,
+              //   isSupplyMutable: false,
+              //   isRevokable: false,
+              //   distribution: [],
+              // },
               children: [],
             },
             {
               name: 'xay',
               duration: 0,
-              mosaic: {
-                supply: '7842928625.000000',
-                divisibility: 6,
-                duration: 0,
-                isTransferable: true,
-                isRestrictable: false,
-                isSupplyMutable: false,
-                isRevokable: false,
-                distribution: [],
-              },
+              // mosaic: {
+              //   supply: '7842928625.000000',
+              //   divisibility: 6,
+              //   duration: 0,
+              //   isTransferable: true,
+              //   isRestrictable: false,
+              //   isSupplyMutable: false,
+              //   isRevokable: false,
+              //   distribution: [],
+              // },
               children: [],
             },
           ],
@@ -109,6 +131,8 @@ export const Configurator = (): JSX.Element => {
       ],
     },
   ]
+  nemesisProp.transactions.transactionsDirectory = '../txes'
+
   const [nemesisProperties, setNemesisProperties] = useState(nemesisProp)
   const handleChaingeNemesisProperties = (prop: NemesisProperties) => {
     setNemesisProperties(prop)
