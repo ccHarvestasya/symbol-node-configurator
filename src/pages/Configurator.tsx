@@ -49,7 +49,7 @@ export const Configurator = (): JSX.Element => {
           name: 'xym',
           duration: 0,
           mosaic: {
-            supply: '7,842,928,625.000000',
+            supply: '7842928625.000000',
             divisibility: 6,
             duration: 0,
             isTransferable: true,
@@ -64,7 +64,7 @@ export const Configurator = (): JSX.Element => {
           name: 'xym2',
           duration: 0,
           mosaic: {
-            supply: '7,842,928,625.000000',
+            supply: '7842928625.000000',
             divisibility: 6,
             duration: 0,
             isTransferable: true,
@@ -78,7 +78,7 @@ export const Configurator = (): JSX.Element => {
               name: 'xam',
               duration: 0,
               mosaic: {
-                supply: '7,842,928,625.000000',
+                supply: '7842928625.000000',
                 divisibility: 6,
                 duration: 0,
                 isTransferable: true,
@@ -93,7 +93,7 @@ export const Configurator = (): JSX.Element => {
               name: 'xay',
               duration: 0,
               mosaic: {
-                supply: '7,842,928,625.000000',
+                supply: '7842928625.000000',
                 divisibility: 6,
                 duration: 0,
                 isTransferable: true,

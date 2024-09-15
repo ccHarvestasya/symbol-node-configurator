@@ -1,3 +1,4 @@
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import DeleteIcon from '@mui/icons-material/Delete'
 import DonutSmallIcon from '@mui/icons-material/DonutSmall'
@@ -21,7 +22,6 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  ListSubheader,
   Switch,
   TextField,
   Typography,
@@ -49,18 +49,22 @@ const createAccount = () => {
   return new Account(csv[0], csv[2], csv[3], csv[4])
 }
 
-const getNsParents = (nss: NamepsacesProp[], parentsName: string[]) => {
-  if (parentsName.length === 0) return undefined
-  const nsParentses1 = nss.filter((val) => {
-    if (val.name === parentsName[0]) return true
+const findNamespace = (nss: NamepsacesProp[], findName: string) => {
+  const findNames = findName.split('.')
+  const nsLv1 = nss.filter((val) => {
+    if (val.name === findNames[0]) return true
     return false
-  })
-  if (parentsName.length === 1) return nsParentses1[0]
-  const nsParentses2 = nsParentses1[0].children.filter((val) => {
-    if (val.name === parentsName[0]) return true
+  })[0]
+  if (findNames.length === 1) return nsLv1
+  const nsLv2 = nsLv1.children.filter((val) => {
+    if (val.name === findNames[1]) return true
     return false
-  })
-  return nsParentses2[0]
+  })[0]
+  if (findNames.length === 2) return nsLv2
+  return nsLv2.children.filter((val) => {
+    if (val.name === findNames[2]) return true
+    return false
+  })[0]
 }
 
 /**
@@ -104,9 +108,19 @@ export const Nemesis = (props: {
   }, [networkIdentifier, nemesisGenerationHashSeed, nemesisSignerPrivateKey])
 
   const listvalue = (
-    <ListItemButton>
+    <ListItem
+      secondaryAction={
+        <IconButton edge="end" aria-label="delete">
+          <DeleteIcon />
+        </IconButton>
+      }
+      disablePadding
+    >
+      <ListItemIcon>
+        <AccountBalanceWalletIcon />
+      </ListItemIcon>
       <ListItemText primary="hogehoge" />
-    </ListItemButton>
+    </ListItem>
   )
 
   /** ネームスペース＆モザイクリスト */
@@ -176,6 +190,8 @@ export const Nemesis = (props: {
   const [open, setOpen] = useState(false)
   const [namespaceParentsName, setNamespaceParentsName] = useState('')
   const [namespaceName, setNamespaceName] = useState('')
+  const [namespaceNameErr, setNamespaceNameErr] = useToggle(false)
+  const [namespaceNameErrMsg, setNamespaceNameErrMsg] = useState('')
   const [namespaceCurrentName, setNamespaceCurrentName] = useState('')
   const [isMosaic, setIsMosaic] = useToggle(false)
   const [supplyUnits, setSupplyUnits] = useState('0')
@@ -188,7 +204,6 @@ export const Nemesis = (props: {
   const [isTransferable, setIsTransferable] = useToggle(false)
   const [isSupplyMutable, setIsSupplyMutable] = useToggle(false)
   const [isRestrictable, setIsRestrictable] = useToggle(false)
-
   const [isDisabledSupplyUnits, setIsDisabledSupplyUnits] = useState(true)
   const [isDisabledDivisibility, setIsDisabledDivisibility] = useState(true)
   const [isDisabledTransferable, setIsDisabledTransferable] = useToggle(true)
@@ -197,6 +212,7 @@ export const Nemesis = (props: {
 
   // ダイアログ開く
   const handleClickOpen = (parents: string, nsCurrentName: string) => {
+    console.log(`${parents}:${nsCurrentName}`)
     setNamespaceParentsName(parents === '' ? 'none' : parents)
     setNamespaceName(nsCurrentName)
     setNamespaceCurrentName(nsCurrentName)
@@ -212,6 +228,27 @@ export const Nemesis = (props: {
     setIsDisabledTransferable(true)
     setIsDisabledSupplyMutable(true)
     setIsDisabledRestrictable(true)
+    setNamespaceNameErr(false)
+    setNamespaceNameErrMsg('')
+    if (nsCurrentName !== '') {
+      const findName = parents === '' ? nsCurrentName : `${parents}.${nsCurrentName}`
+      const ns = findNamespace(prop.namespaces, findName)
+      const isMosaic = ns.mosaic ? true : false
+      setIsMosaic(isMosaic)
+      if (isMosaic) {
+        setSupplyUnits(ns.mosaic!.supply.replace(/\./g, ''))
+        setDivisibility(ns.mosaic!.divisibility.toString())
+        setSupply(ns.mosaic!.supply)
+        setIsTransferable(ns.mosaic!.isTransferable)
+        setIsSupplyMutable(ns.mosaic!.isSupplyMutable)
+        setIsRestrictable(ns.mosaic!.isRestrictable)
+        setIsDisabledSupplyUnits(false)
+        setIsDisabledDivisibility(false)
+        setIsDisabledTransferable(false)
+        setIsDisabledSupplyMutable(true)
+        setIsDisabledRestrictable(true)
+      }
+    }
     setOpen(true)
   }
   // ダイアログ閉じる
@@ -234,38 +271,63 @@ export const Nemesis = (props: {
   }
   // ダイアログ確定
   const confirmDialog = () => {
-    // console.log(namespaceParentsName)
-    // console.log(namespaceName)
-    // console.log(isMosaic)
-    // console.log(supply)
-    // console.log(divisibility)
-    // console.log(isTransferable)
-
-    const nsParentsNames = namespaceParentsName === 'none' ? [] : namespaceParentsName.split('.')
-    const nsParents = getNsParents(prop.namespaces, nsParentsNames)
-
-    if (!nsParents) {
-      const tmpNamespaces = prop.namespaces.filter((val) => {
-        if (val.name === namespaceName) return true
-        return false
-      })
-      let namespace: NamepsacesProp
-      if (tmpNamespaces.length !== 0) {
-        namespace = tmpNamespaces[0]
+    if (namespaceCurrentName === '') {
+      let rootNs: NamepsacesProp[]
+      // 新規作成
+      if (namespaceParentsName === 'none') {
+        // 最上位
+        rootNs = prop.namespaces
       } else {
-        namespace = {
-          name: namespaceName,
-          duration: 0,
-          children: [],
-        }
-        prop.namespaces.push(namespace)
+        const ns = findNamespace(prop.namespaces, namespaceParentsName)
+        rootNs = ns.children
       }
+      const newNs: NamepsacesProp = {
+        name: namespaceName,
+        duration: 0,
+        children: [],
+        mosaic: {
+          duration: 0,
+          supply: supply,
+          divisibility: Number(divisibility),
+          isTransferable: isTransferable,
+          isSupplyMutable: isSupplyMutable,
+          isRestrictable: isRestrictable,
+          isRevokable: false,
+          distribution: [],
+        },
+      }
+      rootNs.push(newNs)
     } else {
-      const tmpParentsNamespaces = nsParents.children.filter((val) => {
-        if (val.name === namespaceName) return true
-        return false
-      })
+      // 変更
+      const ns = findNamespace(prop.namespaces, `${namespaceParentsName}.${namespaceCurrentName}`)
+      ns.name = namespaceName
     }
+
+    // const nsParentsNames = namespaceParentsName === 'none' ? [] : namespaceParentsName.split('.')
+    // const nsParents = getNsParents(prop.namespaces, nsParentsNames)
+
+    // if (!nsParents) {
+    //   const tmpNamespaces = prop.namespaces.filter((val) => {
+    //     if (val.name === namespaceName) return true
+    //     return false
+    //   })
+    //   let namespace: NamepsacesProp
+    //   if (tmpNamespaces.length !== 0) {
+    //     namespace = tmpNamespaces[0]
+    //   } else {
+    //     namespace = {
+    //       name: namespaceName,
+    //       duration: 0,
+    //       children: [],
+    //     }
+    //     prop.namespaces.push(namespace)
+    //   }
+    // } else {
+    //   const tmpParentsNamespaces = nsParents.children.filter((val) => {
+    //     if (val.name === namespaceName) return true
+    //     return false
+    //   })
+    // }
 
     console.log(prop)
     createNamespaceList()
@@ -305,28 +367,6 @@ export const Nemesis = (props: {
   return (
     <>
       <Grid2 container spacing={2}>
-        <Grid2 size={12}>
-          <List
-            sx={{ width: '800px', bgcolor: 'background.paper' }}
-            component="nav"
-            aria-labelledby="nested-list-subheader"
-            subheader={
-              <ListSubheader component="div" id="nested-list-subheader">
-                {t('NameSpace & Mosaic')}
-              </ListSubheader>
-            }
-            disablePadding
-          >
-            {namespaceList}
-            <ListItemButton sx={{ p: 0 }} onClick={() => handleClickOpen('', '')}>
-              <ListItemIcon>
-                <AddCircleOutlineIcon />
-              </ListItemIcon>
-              <ListItemText primary="Add" secondary="Add to top-level" />
-            </ListItemButton>
-          </List>
-        </Grid2>
-
         <Grid2 size={12}>
           <Typography variant="h4" color="primary">
             nemesis
@@ -439,50 +479,15 @@ export const Nemesis = (props: {
             sx={{ width: '800px', bgcolor: 'background.paper' }}
             component="nav"
             aria-labelledby="nested-list-subheader"
-            subheader={
-              <>
-                <ListSubheader component="div" id="nested-list-subheader">
-                  NameSpace & Mosaic
-                  <IconButton edge="end" aria-label="delete" style={{ float: 'right' }}>
-                    <DeleteIcon />
-                  </IconButton>
-                </ListSubheader>
-              </>
-            }
+            disablePadding
           >
-            <ListItemButton sx={{ height: 30 }}>
-              <ListItemText primary="symbol" />
+            {namespaceList}
+            <ListItemButton sx={{ p: 0 }} onClick={() => handleClickOpen('', '')}>
+              <ListItemIcon>
+                <AddCircleOutlineIcon />
+              </ListItemIcon>
+              <ListItemText primary="Add" secondary="Add to top-level" />
             </ListItemButton>
-            <List component="div" disablePadding>
-              <ListItemButton sx={{ pl: 4, height: 45 }}>
-                <ListItemText
-                  primary="xym"
-                  secondary="supply: 7,842,928,625.000000 / Transferable"
-                />
-              </ListItemButton>
-              <ListItemButton sx={{ pl: 4, height: 30 }}>
-                <ListItemText primary="volt" />
-              </ListItemButton>
-              <List component="div" disablePadding>
-                <ListItemButton sx={{ pl: 8, height: 30 }}>
-                  <ListItemText
-                    primary="xol"
-                    secondary="supply: 8,999,999,999.000000 / Transferable / SupplyMutable / Restrictable / Revokable"
-                  />
-                </ListItemButton>
-              </List>
-            </List>
-            <ListItemButton sx={{ height: 30 }}>
-              <ListItemText primary="nem" />
-            </ListItemButton>
-            <List component="div" disablePadding>
-              <ListItemButton sx={{ pl: 4, height: 30 }}>
-                <ListItemText
-                  primary="xem"
-                  secondary="supply: 8,999,999,999.000000 / Transferable"
-                />
-              </ListItemButton>
-            </List>
           </List>
         </Grid2>
 
@@ -514,6 +519,22 @@ export const Nemesis = (props: {
           component: 'form',
           onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
             event.preventDefault()
+            // 重複チェック
+            if (namespaceName !== namespaceCurrentName) {
+              const findName =
+                namespaceParentsName === 'none'
+                  ? namespaceName
+                  : `${namespaceParentsName}.${namespaceName}`
+              const findNs = findNamespace(prop.namespaces, findName)
+              if (findNs) {
+                setNamespaceNameErr(true)
+                setNamespaceNameErrMsg(t('Existing namespace'))
+                return
+              } else {
+                setNamespaceNameErr(false)
+                setNamespaceNameErrMsg('')
+              }
+            }
             // const formData = new FormData(event.currentTarget)
             // const formJson = Object.fromEntries(formData.entries())
             // const email = formJson.email
@@ -538,6 +559,8 @@ export const Nemesis = (props: {
             size="small"
             variant="outlined"
             value={namespaceName}
+            error={namespaceNameErr}
+            helperText={namespaceNameErrMsg}
             onChange={(e) => setNamespaceName(e.target.value)}
             fullWidth
           />
@@ -626,6 +649,28 @@ export const Nemesis = (props: {
                     }
                     label={t('Restrictable')}
                   />
+                </Grid2>
+                <Grid2 size={12}>
+                  <Typography gutterBottom variant="h6" component="div">
+                    {t('Distribution')}
+                  </Typography>
+                </Grid2>
+                <Grid2 size={12} sx={{ my: 0 }}>
+                  <Divider />
+                </Grid2>
+                <Grid2 size={12} sx={{ my: 0 }}>
+                  <List component="div" disablePadding>
+                    {listvalue}
+                    <ListItemButton
+                      sx={{ p: 0 }}
+                      // onClick={() => handleClickOpen(p, '')}
+                    >
+                      <ListItemIcon>
+                        <AddCircleOutlineIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Add" />
+                    </ListItemButton>
+                  </List>
                 </Grid2>
               </Grid2>
             </CardContent>
