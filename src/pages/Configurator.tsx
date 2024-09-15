@@ -1,6 +1,7 @@
-import { Box, Tab, Tabs, Typography } from '@mui/material'
+import { Box, Tab, Tabs } from '@mui/material'
 import { SyntheticEvent, useEffect, useState } from 'react'
 import { Nemesis } from '../components/Nemesis'
+import { NemesisProperties } from '../models/NemesisProperties'
 const childProcess = window.require('child_process')
 
 interface TabPanelProps {
@@ -18,14 +19,10 @@ function TabPanel(props: TabPanelProps) {
       hidden={value !== index}
       id={`vertical-tabpanel-${index}`}
       aria-labelledby={`vertical-tab-${index}`}
-      style={{ width: '100%', overflowY: 'auto' }}
+      style={{ width: '100%', padding: '20px', overflowY: 'auto' }}
       {...other}
     >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          <Typography>{children}</Typography>
-        </Box>
-      )}
+      {value === index && <>{children}</>}
     </div>
   )
 }
@@ -40,20 +37,91 @@ function a11yProps(index: number) {
 export const Configurator = (): JSX.Element => {
   const [address, setAddress] = useState('')
 
+  /** nemesisプロパティ */
+  const nemesisProp = new NemesisProperties()
+  nemesisProp.nemesis.networkIdentifier = 109
+  nemesisProp.namespaces = [
+    {
+      name: 'symbol',
+      duration: 0,
+      children: [
+        {
+          name: 'xym',
+          duration: 0,
+          mosaic: {
+            supply: '7,842,928,625.000000',
+            divisibility: 6,
+            duration: 0,
+            isTransferable: true,
+            isRestrictable: false,
+            isSupplyMutable: false,
+            isRevokable: false,
+            distribution: [],
+          },
+          children: [],
+        },
+        {
+          name: 'xym2',
+          duration: 0,
+          mosaic: {
+            supply: '7,842,928,625.000000',
+            divisibility: 6,
+            duration: 0,
+            isTransferable: true,
+            isRestrictable: false,
+            isSupplyMutable: false,
+            isRevokable: false,
+            distribution: [],
+          },
+          children: [
+            {
+              name: 'xam',
+              duration: 0,
+              mosaic: {
+                supply: '7,842,928,625.000000',
+                divisibility: 6,
+                duration: 0,
+                isTransferable: true,
+                isRestrictable: false,
+                isSupplyMutable: false,
+                isRevokable: false,
+                distribution: [],
+              },
+              children: [],
+            },
+            {
+              name: 'xay',
+              duration: 0,
+              mosaic: {
+                supply: '7,842,928,625.000000',
+                divisibility: 6,
+                duration: 0,
+                isTransferable: true,
+                isRestrictable: false,
+                isSupplyMutable: false,
+                isRevokable: false,
+                distribution: [],
+              },
+              children: [],
+            },
+          ],
+        },
+      ],
+    },
+  ]
+  const [nemesisProperties, setNemesisProperties] = useState(nemesisProp)
+  const handleChaingeNemesisProperties = (prop: NemesisProperties) => {
+    setNemesisProperties(prop)
+  }
+
   const [value, setValue] = useState(0)
 
   const handleChange = (event: SyntheticEvent, newValue: number) => {
     setValue(newValue)
   }
 
-  useEffect(() => {
-    const stdout = childProcess.execSync(
-      'docker exec -i symbol-server /usr/catapult/bin/catapult.tools.addressgen -f csv -c 1',
-    )
-    // setAddress(stdout.toString().split('\n')[7])
-    setAddress(stdout.toString())
-    console.log(stdout.toString())
-  }, [])
+  /** 初期表示 */
+  useEffect(() => {}, [])
 
   return (
     <>
@@ -110,7 +178,10 @@ export const Configurator = (): JSX.Element => {
           <Tab label="p2p" {...a11yProps(0)} />
         </Tabs>
         <TabPanel value={value} index={0}>
-          <Nemesis />
+          <Nemesis
+            nemesisProperties={nemesisProperties}
+            handleChaingeNemesisProperties={handleChaingeNemesisProperties}
+          />
         </TabPanel>
         <TabPanel value={value} index={1}>
           Item Two
